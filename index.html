@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Flora — Plant Care System</title>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <!-- Chart.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+  <!-- Our stylesheet -->
+  <link rel="stylesheet" href="./style.css"/>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     SERVER STATUS BANNER
+══════════════════════════════════════ -->
+<div id="server-banner" class="hidden">
+  <span id="banner-text"></span>
+  <button class="banner-close" onclick="hideBanner()">✕</button>
+</div>
+
+<!-- ══════════════════════════════════════
+     AUTH SCREEN  (Login / Register)
+══════════════════════════════════════ -->
+<div id="auth-screen">
+  <div class="auth-bg"></div>
+  <div class="auth-box">
+
+    <div class="auth-logo">
+      <span class="leaf">🌿</span>
+      <h1>Flora</h1>
+      <p>Automated Plant Care System</p>
+      <div class="mode-badge" id="mode-badge" onclick="checkBackend()">
+        <div class="mode-dot"></div>
+        <span id="mode-badge-text">Checking server…</span>
+      </div>
+    </div>
+
+    <!-- Sign In / Create Account tabs -->
+    <div class="tabs">
+      <button class="tab active" id="tab-login"    onclick="switchTab('login')">Sign In</button>
+      <button class="tab"        id="tab-register" onclick="switchTab('register')">Create Account</button>
+    </div>
+
+    <!-- ── Sign In panel ── -->
+    <div class="panel active" id="panel-login">
+      <div class="field">
+        <label>Username</label>
+        <input id="li-user" type="text" placeholder="Enter your username" autocomplete="username"/>
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <div class="pw-wrap">
+          <input id="li-pass" type="password" placeholder="Enter your password" autocomplete="current-password"/>
+          <button class="pw-eye" onclick="togglePw('li-pass',this)" tabindex="-1">👁</button>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="doLogin()">Sign In →</button>
+      <div style="margin-top:10px;text-align:center;font-size:11px;color:var(--text3);font-family:'DM Mono',monospace">
+        Default: <strong style="color:var(--text2)">admin</strong> / <strong style="color:var(--text2)">admin123</strong>
+      </div>
+    </div>
+
+    <!-- ── Create Account panel ── -->
+    <div class="panel" id="panel-register">
+      <div class="field">
+        <label>Choose a Username</label>
+        <input id="re-user" type="text" placeholder="e.g. plant_lover_99"
+          autocomplete="username" oninput="clearAuthMsg()"/>
+        <div class="hint">3–20 chars · letters, numbers, underscore only</div>
+      </div>
+      <div class="field">
+        <label>Choose a Password</label>
+        <div class="pw-wrap">
+          <input id="re-pass" type="password" placeholder="Min 4 characters"
+            autocomplete="new-password" oninput="checkStrength(this.value)"/>
+          <button class="pw-eye" onclick="togglePw('re-pass',this)" tabindex="-1">👁</button>
+        </div>
+        <div class="pw-bar" id="pw-bar"></div>
+        <div class="pw-lbl" id="pw-lbl"></div>
+      </div>
+      <div class="field">
+        <label>Confirm Password</label>
+        <div class="pw-wrap">
+          <input id="re-conf" type="password" placeholder="Repeat your password"
+            autocomplete="new-password" oninput="clearAuthMsg()"/>
+          <button class="pw-eye" onclick="togglePw('re-conf',this)" tabindex="-1">👁</button>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="doRegister()">Create My Account →</button>
+    </div>
+
+    <div id="auth-msg" class="auth-msg"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     CHANGE PASSWORD MODAL
+══════════════════════════════════════ -->
+<div class="modal-overlay" id="chpw-modal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div class="modal-title">🔑 Change Password</div>
+      <button class="modal-close" onclick="closeModal('chpw-modal')">✕</button>
+    </div>
+    <div class="field">
+      <label>Current Password</label>
+      <div class="pw-wrap">
+        <input id="cp-cur" type="password" placeholder="Your current password"/>
+        <button class="pw-eye" onclick="togglePw('cp-cur',this)" tabindex="-1">👁</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>New Password</label>
+      <div class="pw-wrap">
+        <input id="cp-new" type="password" placeholder="Min 4 characters"/>
+        <button class="pw-eye" onclick="togglePw('cp-new',this)" tabindex="-1">👁</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>Confirm New Password</label>
+      <div class="pw-wrap">
+        <input id="cp-cnf" type="password" placeholder="Repeat new password"/>
+        <button class="pw-eye" onclick="togglePw('cp-cnf',this)" tabindex="-1">👁</button>
+      </div>
+    </div>
+    <button class="btn-primary" onclick="doChangePassword()">Update Password</button>
+    <div id="chpw-msg" class="modal-msg"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     APP SHELL
+══════════════════════════════════════ -->
+<div id="app">
+
+  <!-- ── Sidebar ── -->
+  <div class="sidebar">
+    <div class="sb-logo">
+      <div class="brand">🌿 Flora</div>
+      <div class="sub">Plant Care · v3.0</div>
+      <div class="mode-pill" id="sb-mode-pill">⬤ local mode</div>
+    </div>
+
+    <div class="sb-section">Navigation</div>
+    <div class="nav-item active" onclick="goPage('dashboard',this)"><span class="ico">⊞</span>Dashboard</div>
+    <div class="nav-item" onclick="goPage('alerts',this)">
+      <span class="ico">🔔</span>Alerts
+      <span class="nav-badge" id="alert-badge">0</span>
+    </div>
+    <div class="nav-item" onclick="goPage('history',this)"><span class="ico">📈</span>History</div>
+    <div class="nav-item" onclick="goPage('profile',this)"><span class="ico">👤</span>Profile</div>
+    <div class="nav-item" onclick="openModal('chpw-modal')"><span class="ico">🔑</span>Change Password</div>
+
+    <div class="sb-section">My Plants</div>
+    <div class="plant-list" id="plant-nav"></div>
+
+    <div class="sb-user">
+      <div class="avatar" id="sb-avatar">A</div>
+      <div>
+        <div class="uname" id="sb-uname">—</div>
+        <div class="urole">plant_manager</div>
+      </div>
+      <div class="sb-actions">
+        <button class="icon-btn" title="Sign Out" onclick="doLogout()">⏏</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Main content area ── -->
+  <div class="main">
+
+    <!-- Topbar -->
+    <div class="topbar">
+      <div>
+        <div class="topbar-title" id="page-title">Dashboard</div>
+        <div class="topbar-sub"   id="page-sub">Initialising…</div>
+      </div>
+      <div class="topbar-right">
+        <div class="mode-indicator" id="topbar-mode">⬤ local</div>
+        <div class="live-pill"><div class="live-dot"></div>LIVE</div>
+      </div>
+    </div>
+
+    <!-- ════ PAGE: Dashboard ════ -->
+    <div class="page active" id="page-dashboard">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Total Plants</div>
+          <div class="stat-val">3<em>plants</em></div>
+          <div class="stat-note">Monitored 24/7</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Avg Health</div>
+          <div class="stat-val" id="st-health">—<em>%</em></div>
+          <div class="stat-note" id="st-hlbl">Calculating…</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Avg Moisture</div>
+          <div class="stat-val" id="st-moist">—<em>%</em></div>
+          <div class="stat-note">Optimal 40–70%</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Active Alerts</div>
+          <div class="stat-val" id="st-alerts">0<em>⚠</em></div>
+          <div class="stat-note">Auto-monitored</div>
+        </div>
+      </div>
+      <div class="plants-grid" id="plants-grid"></div>
+    </div>
+
+    <!-- ════ PAGE: Plant Detail ════ -->
+    <div class="page" id="page-detail">
+      <div class="detail-hdr">
+        <div class="detail-ico" id="d-ico">🌿</div>
+        <div style="flex:1">
+          <div class="detail-name" id="d-name">Plant</div>
+          <div class="detail-sub"  id="d-sub">—</div>
+        </div>
+        <button class="water-btn" style="width:auto;padding:8px 18px;margin:0"
+          onclick="waterPlant(activePlant)">💧 Water Now</button>
+      </div>
+      <div class="sbig-grid" id="sbig"></div>
+      <div class="ai-card">
+        <div class="ai-hdr">
+          <div class="ai-ico">🤖</div>
+          <div class="ai-title">AI Health Analysis<span class="ai-badge">● LIVE</span></div>
+        </div>
+        <div class="ai-body" id="ai-body">Analysing…</div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-head">
+          <div class="chart-title">Sensor History</div>
+          <div class="ctabs">
+            <button class="ctab active" onclick="switchMetric('moisture',this)">Moisture</button>
+            <button class="ctab" onclick="switchMetric('temp',this)">Temp</button>
+            <button class="ctab" onclick="switchMetric('light',this)">Light</button>
+          </div>
+        </div>
+        <div class="chart-wrap"><canvas id="detail-chart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- ════ PAGE: Alerts ════ -->
+    <div class="page" id="page-alerts">
+      <div class="alert-list" id="alert-list">
+        <div style="color:var(--text3);font-size:13px;padding:10px 0">No alerts yet.</div>
+      </div>
+    </div>
+
+    <!-- ════ PAGE: History ════ -->
+    <div class="page" id="page-history">
+      <div class="chart-card">
+        <div class="chart-head">
+          <div class="chart-title">All Plants Overview</div>
+          <div class="ctabs">
+            <button class="ctab active" onclick="switchHistMetric('moisture',this)">Moisture</button>
+            <button class="ctab" onclick="switchHistMetric('temp',this)">Temp</button>
+            <button class="ctab" onclick="switchHistMetric('light',this)">Light</button>
+          </div>
+        </div>
+        <div class="chart-wrap" style="height:240px"><canvas id="hist-chart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-head"><div class="chart-title">Health Score — All Plants</div></div>
+        <div class="chart-wrap" style="height:190px"><canvas id="health-chart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- ════ PAGE: Profile ════ -->
+    <div class="page" id="page-profile">
+      <div class="profile-grid">
+
+        <!-- Account info -->
+        <div class="profile-card">
+          <h3>👤 Account Info</h3>
+          <div class="profile-info">
+            <div class="profile-avatar" id="prof-avatar">A</div>
+            <div>
+              <div class="profile-name" id="prof-name">—</div>
+              <div class="profile-meta">plant_manager · Active</div>
+            </div>
+          </div>
+          <div class="info-row"><span class="ik">USERNAME</span><span class="iv" id="prof-user">—</span></div>
+          <div class="info-row"><span class="ik">MEMBER SINCE</span><span class="iv" id="prof-since">—</span></div>
+          <div class="info-row"><span class="ik">TOTAL USERS</span><span class="iv" id="prof-total">—</span></div>
+          <div class="info-row"><span class="ik">DATA SOURCE</span><span class="iv" id="prof-mode">—</span></div>
+          <div style="margin-top:18px">
+            <button class="btn-primary" onclick="openModal('chpw-modal')" style="font-size:13px;padding:10px">
+              🔑 Change Password
+            </button>
+          </div>
+        </div>
+
+        <!-- Plant summary + API card -->
+        <div>
+          <div class="profile-card">
+            <h3>🌿 Plant Summary</h3>
+            <div id="prof-plants" style="display:flex;flex-direction:column;gap:10px"></div>
+          </div>
+          <div class="backend-card" id="backend-api-card" style="display:none">
+            <h3>⚡ Backend API Endpoints</h3>
+            <div class="endpoint-row">
+              <span class="endpoint-method GET">GET</span>
+              <span class="endpoint-path">/api/plants</span>
+              <span class="endpoint-desc">All plant data</span>
+            </div>
+            <div class="endpoint-row">
+              <span class="endpoint-method GET">GET</span>
+              <span class="endpoint-path">/api/plants/:id/history</span>
+              <span class="endpoint-desc">Sensor history</span>
+            </div>
+            <div class="endpoint-row">
+              <span class="endpoint-method POST">POST</span>
+              <span class="endpoint-path">/api/plants/:id/water</span>
+              <span class="endpoint-desc">Trigger watering</span>
+            </div>
+            <div class="endpoint-row">
+              <span class="endpoint-method GET">GET</span>
+              <span class="endpoint-path">/api/alerts</span>
+              <span class="endpoint-desc">Alert history</span>
+            </div>
+            <div class="endpoint-row">
+              <span class="endpoint-method POST">POST</span>
+              <span class="endpoint-path">/api/auth/login</span>
+              <span class="endpoint-desc">User login</span>
+            </div>
+            <div class="endpoint-row">
+              <span class="endpoint-method POST">POST</span>
+              <span class="endpoint-path">/api/auth/register</span>
+              <span class="endpoint-desc">New account</span>
+            </div>
+            <div class="endpoint-row">
+              <span class="endpoint-method POST">POST</span>
+              <span class="endpoint-path">/api/auth/change-password</span>
+              <span class="endpoint-desc">Update password</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ════ END PAGES ════ -->
+
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- Our JavaScript -->
+<script src="./string.js"></script>
+</body>
+</html>
